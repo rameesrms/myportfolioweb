@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 
 
- String fontFam = "Lalita";
+ String fontFam = "ChakraPetch";
 
 
    TextStyle get lstItemTxt => getstyle(weight:FontWeight.w400,size:12.0,color: Color(0xff474747) );

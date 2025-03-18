@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:entry/entry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -25,7 +26,16 @@ class SmallWidgets  {
     return  Padding(
       padding: const EdgeInsets.all(8.0),
       child: Text(title,style: t400_14,),
-    );
+    ).animate(
+      // Entry Animation: Fade in with scale
+      onPlay: (controller) => controller.forward(),
+      // onUnmount: (controller) => controller.reverse(), // Exit Animation
+    )
+        .fadeIn(duration: 500.ms)
+        .scale(duration: 400.ms,)
+        .moveX(begin: 34,duration: 500.ms)
+        // .fadeOut(duration: 500.ms)// Fade out on exit
+    ;
 
   }
 

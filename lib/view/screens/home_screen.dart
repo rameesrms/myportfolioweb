@@ -3,14 +3,21 @@
 import 'package:entry/entry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mywebapp/controller/managers/home_manager.dart';
+import 'package:mywebapp/view/screens/data.dart';
+import 'package:mywebapp/view/screens/top-section.dart';
+import 'package:mywebapp/view/widgets/flutter_sales_graph.dart';
 import 'package:provider/provider.dart';
 import '../../../model/helper/service_locator.dart';
 import '../theme/constants.dart';
 import '../theme/text_styles.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'dart:html' as html;
 
 import '../widgets/common_widgets.dart';
 import '../widgets/flutter_sales_graph.dart';
+import 'main_area.dart';
 
 
 
@@ -20,26 +27,58 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>  with SingleTickerProviderStateMixin {
+  // late AnimationController _controller;
+  // late Animation<double> _rotationAnimation;
+  // late Animation<double> _fadeAnimation;
+  // late Animation<Offset> _slideAnimation;
 
 
 
+  bool isMenuOpen = false;
+
+Color color =Colors.black;
 
   @override
   void initState() {
-   // getIt<CloseSaleManager>().loadHomeScreen();
-   // getIt<CloseSaleManager>().loadPromotions();
-   // _getCurrentLocation();
     super.initState();
-  }
+    scrollController.addListener(() {
+      getIt<HomeManager>().setOffsetOfHome(scrollController.offset);
 
+      // setState(() {
+      //   _offset = scrollController.offset;
+      // });
+    });
+
+
+    Provider.of<HomeManager>(context, listen: false).addListener(() {
+      final value = Provider.of<HomeManager>(context, listen: false).homeOffset;
+      if (value > 50) {
+        // _controller.reverse();
+        color = Colors.white;
+      }else{
+        // _controller.forward();
+        color = Colors.black;
+
+      }
+    });
+  }
 
   @override
   void dispose() {
-    // TODO: implement dispose
+    scrollController.dispose();
+    // _controller.dispose();
     super.dispose();
-
   }
+
+
+
+
+
+
+ScrollController scrollController = ScrollController();
+
+
 
   // Show dialog when GPS is off
 
@@ -47,15 +86,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Show dialog when permission is permanently denied
 
-  bool isHovered = false;
 
 
 
 
   @override
   Widget build(BuildContext context) {
-final hoveredTransform = Matrix4.identity()..translate(4,-4,0);
-final transform = isHovered?hoveredTransform:Matrix4.identity();
+    final bool isMobile = DeviceType.isMobile(context);
+    final bool isTablet = DeviceType.isTablet(context);
+    final bool isDesktop = DeviceType.isDesktop(context);
+    final hoveredTransform = Matrix4.identity()..translate(4,-4,0);
 
 
     var smWidgets = SmallWidgets();
@@ -92,91 +132,49 @@ final transform = isHovered?hoveredTransform:Matrix4.identity();
 
 
 
-return Scaffold(body: Column(children: [
-  Container(height: 100,width:maxWidth,color: Colors.black,
-  child: Row(children: [
+return Scaffold(
+  body: AnimatedContainer(color: color,duration: Duration(milliseconds: 500),
 
 
-    Text("RMS"),
-    Spacer(),
+    child: CustomScrollView(controller: scrollController,
+      slivers: [
+        // AppBar or fixed header
+        SliverToBoxAdapter(child: TopOfHome()),
 
-    smWidgets.menuText("Home"),
-    smWidgets.menuText("My works"),
-    smWidgets.menuText("Skills"),
-    smWidgets.menuText("Contact"),
+        // Gradient background and main content
+        SliverToBoxAdapter(
+          child: MainArea(maxWidth: maxWidth, maxHeight: maxHeight,),
+        ),
 
-
-
-  ],),
-  ),
-  Expanded(child: Container(width: maxWidth,
-  decoration: BoxDecoration(gradient: LinearGradient(colors: [
-    Color(0xff000000 ),
-    Color(0xff333333  ),
-
-  ])),
-
-    child: Padding(
-      padding: EdgeInsets.symmetric(horizontal: w1p*6),
-      child: Row(children: [
-
-        Column(crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Im Ramees\na Flutter Developer",style: t400_32,),
-
-
-
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Stack(
-                children: [
-
-                  Container(
-
-                    width: 150,height: 40,
-                    decoration: BoxDecoration(
-                        color: Colors.amber,border: Border.all(color: Colors.black),
-                        borderRadius: BorderRadius.circular(30)),
-                  ),
-                  MouseRegion(
-                      onEnter:(event) => onEntered(true),
-                      onExit: (event) => onEntered(false),
-                    child: AnimatedContainer(
-
-                        width: 150,height: 40,
-                        duration: Duration(milliseconds: 200),
-                        transform: transform,
-
-                        decoration: BoxDecoration(border: Border.all(color: Colors.white),
-                            color: Colors.black,
-                            borderRadius: BorderRadius.circular(30)),
-                        child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text("Resume",style: t400_18,),
-                          Icon(Icons.download,color: Colors.white,)
-                        ],
-                      )
-                    )),
-                  ),
-
-
-                ],
+        SliverPadding(
+          padding: const EdgeInsets.all(18.0),
+          sliver: SliverGrid(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(mainAxisExtent: 300,
+            crossAxisCount: isMobile?2:3, // Single row for horizontal scrolling
+            childAspectRatio: 2/1, // Adjust this ratio based on the width and height of your items
+            mainAxisSpacing: 10,crossAxisSpacing: 10 // Spacing between items horizontally
+              ),
+              delegate: SliverChildBuilderDelegate(
+            (BuildContext context, int index) {
+              final e = myProjects[index];
+              return MyProjectItem(h1p: h1p, w1p: w1p, pf: e,isSwiped: color==Colors.white);
+            },
+            childCount: myProjects.length,
               ),
             ),
-
-
-
-          ],
         )
-      ],),
+      ],
     ),
-
-  ))
-],)
+  ),
 
 
+
+
+  // SizedBox(height: 200,
+  //   child: ListView(
+  //     scrollDirection: Axis.horizontal,
+  //     children: myProjects.map((e)=>MyProjectItem(h1p: h1p, w1p: w1p, pf: e)).toList(),),
+  // )
 
 
                 );
@@ -191,11 +189,12 @@ return Scaffold(body: Column(children: [
   }
 
 
-  onEntered(bool isHovered)=>setState(() {
-    this.isHovered = isHovered;
-  });
+
 
 }
+
+
+
 //   return PageRouteBuilder(
 //     pageBuilder: (context, animation, secondaryAnimation) => const HomeScreen(),
 //     transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -212,3 +211,25 @@ return Scaffold(body: Column(children: [
 //   );
 // }
 
+
+
+
+
+Future<void> downloadFile(String filePath, String fileName) async {
+  // Load the file as bytes
+  final data = await rootBundle.load(filePath);
+  final bytes = data.buffer.asUint8List();
+
+  // Create a blob from the file data
+  final blob = html.Blob([bytes]);
+  final url = html.Url.createObjectUrlFromBlob(blob);
+
+  // Create a temporary anchor element and trigger the download
+  final anchor = html.AnchorElement(href: url)
+    ..download = fileName
+    ..target = 'blank';
+  anchor.click();
+
+  // Revoke the object URL to free resources
+  html.Url.revokeObjectUrl(url);
+}
